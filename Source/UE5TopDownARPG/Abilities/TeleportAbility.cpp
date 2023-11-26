@@ -21,11 +21,9 @@ bool UTeleportAbility::Activate(FVector Location)
 
 	FVector TeleportationVector = Location - Owner->GetActorLocation();
 
-	if (TeleportationVector.Size() > MaxRange)
-	{
-		UE_LOG(LogUE5TopDownARPG, Log, TEXT("TeleportationRange exceedes the maximum range"));
-		return false;
-	}
+	FVector NewPosition = Location;
+
+	FVector OriginPosition = Owner->GetActorLocation();
 
 	if (TeleportationVector.Size() < MinRange)
 	{
@@ -33,9 +31,22 @@ bool UTeleportAbility::Activate(FVector Location)
 		return false;
 	}
 
-	FVector OriginPosition = Owner->GetActorLocation();
+	if (TeleportationVector.Size() > MaxRange)
+	{
+		if (DoesRetract)
+		{
+			UE_LOG(LogUE5TopDownARPG, Log, TEXT("TeleportationRange exceedes the maximum range, so le length will be retracted"));
+			TeleportationVector.Normalize();
+			NewPosition = OriginPosition + TeleportationVector * MaxRange;
+			NewPosition.Z = NewPosition.Z - ZOffset;
+		}
+		else
+		{
+			UE_LOG(LogUE5TopDownARPG, Log, TEXT("TeleportationRange exceedes the maximum range"));
+			return false;
+		}
+	}
 
-	FVector NewPosition = Location;
 	NewPosition.Z = NewPosition.Z + ZOffset;
 
 	FHitResult* OutSweepHitResult = new FHitResult();
