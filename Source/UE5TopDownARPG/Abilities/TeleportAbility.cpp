@@ -19,11 +19,12 @@ bool UTeleportAbility::Activate(FVector Location)
 		return false;
 	}
 
-	FVector TeleportationVector = Location - Owner->GetActorLocation();
+	FVector CurrentLocation = Owner->GetActorLocation();
 
-	FVector NewPosition = Location;
+	FVector NewLocation = Location;
+	NewLocation.Z = NewLocation.Z + ZOffset;
 
-	FVector OriginPosition = Owner->GetActorLocation();
+	FVector TeleportationVector = NewLocation - CurrentLocation;
 
 	if (TeleportationVector.Size() < MinRange)
 	{
@@ -37,8 +38,7 @@ bool UTeleportAbility::Activate(FVector Location)
 		{
 			UE_LOG(LogUE5TopDownARPG, Log, TEXT("TeleportationRange exceedes the maximum range, so le length will be retracted"));
 			TeleportationVector.Normalize();
-			NewPosition = OriginPosition + TeleportationVector * MaxRange;
-			NewPosition.Z = NewPosition.Z - ZOffset;
+			NewLocation = CurrentLocation + TeleportationVector * MaxRange;
 		}
 		else
 		{
@@ -47,11 +47,9 @@ bool UTeleportAbility::Activate(FVector Location)
 		}
 	}
 
-	NewPosition.Z = NewPosition.Z + ZOffset;
-
 	FHitResult* OutSweepHitResult = new FHitResult();
 
-	bool TeleportationResult  = Owner->SetActorLocation(NewPosition, !CanTeleportOverObstacle, OutSweepHitResult);
+	bool TeleportationResult  = Owner->SetActorLocation(NewLocation, !CanTeleportOverObstacle, OutSweepHitResult);
 
 	if (!CanTeleportOverObstacle && OutSweepHitResult->GetComponent()) {
 		if (DoesRetract) {
@@ -60,7 +58,7 @@ bool UTeleportAbility::Activate(FVector Location)
 		else
 		{
 			UE_LOG(LogUE5TopDownARPG, Log, TEXT("The player can not teleport over obstacles"));
-			Owner->SetActorLocation(OriginPosition);
+			Owner->SetActorLocation(CurrentLocation);
 			TeleportationResult = false;
 		}
 	}
