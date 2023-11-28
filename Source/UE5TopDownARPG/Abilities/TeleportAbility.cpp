@@ -54,6 +54,15 @@ bool UTeleportAbility::Activate(FVector Location)
 	if (!CanTeleportOverObstacle && OutSweepHitResult->GetComponent()) {
 		if (DoesRetract) {
 			UE_LOG(LogUE5TopDownARPG, Log, TEXT("The player was retracted"));
+
+			FVector NewTeleportationVector = Owner->GetActorLocation() - CurrentLocation;
+			if (NewTeleportationVector.Size() < MinRange)
+			{
+				UE_LOG(LogUE5TopDownARPG, Log, TEXT("TeleportationRange is less than the minimum range after the retracton"));
+				Owner->SetActorLocation(CurrentLocation);
+				TeleportationResult = false;
+			}
+
 		}
 		else
 		{
